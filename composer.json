@@ -1,0 +1,9 @@
+{
+  "name": "truecrouton/retort",
+  "description": "Easy PHP route definition and request validation",
+  "type": "library",
+  "license": "GPLv3",
+  "require": {
+    "php": ">=8.0"
+  }
+}
