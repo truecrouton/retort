@@ -81,6 +81,24 @@ Use `Validation::createObject()` to validate requests. `Validation::createObject
     $request = Validation::createObject(ThingGetRequest::class, ['id' => 0]); // throws Error
     $request = Validation::createObject(ThingGetRequest::class, ['id' => 1]); // creates a ThingGetRequest object with id = 1
 
+`ValidString`, `ValidNumber`, and `ValidObject` `Validation` objects are provided. Check their [class definitions](Validation) for validation options, e.g., required, min, max...
+
+`ValidObject` can be used for nested objects and arrays of objects.
+
+    class GoingConcern extends RetortRequest
+    {
+        #[ValidObject(true, Address::class)]
+        public Address $address;
+
+        #[ValidObject(true, Employees::class)]
+        public array $employees; // use array type
+    }
+
+Parameters can be made optional.
+
+    #[ValidString(false, 1)] // $nickname will be a string of length >= 1 and is optional (false)
+    public ?string $nickname;
+
 ## Dependency injection
 
 A few `DependencyController`s are provided as examples. For instance, the `MysqlController` constructor accepts a `mysqli` object `$myDb` which can then be used within the controller such as through the included `executeQuery()` method.
