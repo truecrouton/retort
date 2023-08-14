@@ -2,7 +2,7 @@
   "name": "truecrouton/retort",
   "description": "Easy PHP route definition and request validation",
   "type": "library",
-  "license": "GPLv3",
+  "license": "GPL-3.0-only",
   "autoload": {
     "psr-4": {
       "Retort\\": "src/"
