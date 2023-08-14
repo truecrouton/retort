@@ -3,6 +3,16 @@
   "description": "Easy PHP route definition and request validation",
   "type": "library",
   "license": "GPLv3",
+  "autoload": {
+    "psr-4": {
+      "Retort\\": "src/"
+    }
+  },
+  "authors": [
+    {
+      "name": "Pin Tan"
+    }
+  ],
   "require": {
     "php": ">=8.0"
   }
