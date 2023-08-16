@@ -47,6 +47,9 @@ class ValidationTest extends TestCase
         $this->assertEquals($jacketReq['pockets'][1]['hasZipper'], $pocket2->hasZipper);
 
         $jacketReq['manufacturer']['address'] = 'Las Vegas, NV';
+        $jacketReq['pockets'][0]['contents'] = [
+            'keys', 'wallet', 'phone'
+        ];
 
         $jacket = Validation::createObject(Jacket::class, $jacketReq);
         $this->assertObjectHasProperty('manufacturer', $jacket);

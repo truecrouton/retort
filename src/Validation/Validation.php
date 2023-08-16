@@ -40,14 +40,10 @@ class Validation
 
             $propType = $prop->getType()?->getName();
 
-            if ($instance instanceof ValidObject) {
-                if ($propType === 'array') {
-                    if (!is_array($value)) throw new Error("$propName is not an array.");
-                    foreach ($value as $v) {
-                        $created->$propName[] = $instance->validate($v);
-                    }
-                } else {
-                    $created->$propName = $instance->validate($value);
+            if ($propType == 'array') {
+                if (!is_array($value)) throw new Error("$propName is not an array.");
+                foreach ($value as $v) {
+                    $created->$propName[] = $instance->validate($v);
                 }
             } else {
                 $created->$propName = $instance->validate($value);

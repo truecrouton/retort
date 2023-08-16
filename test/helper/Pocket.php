@@ -13,4 +13,7 @@ class Pocket extends RetortRequest
 
     #[ValidNumber(true, 0)]
     public int $hasZipper;
+
+    #[ValidString(false, 1, 50)]
+    public ?array $contents;
 }
