@@ -1,0 +1,24 @@
+# retort_typegen sample config
+
+# Generate type definitions for these PHP classes
+classes = [
+    "Retort\\Test\\Helper\\Jacket"
+]
+
+# Template for type generation in mustache format
+template = '''
+interface {{class}} {
+    {{#definitions}}
+    {{name}}{{#nullable}}?{{/nullable}}: {{type}}{{#iterable}}[]{{/iterable}};
+    {{/definitions}}
+}
+'''
+
+# Type mappings, e.g., int (php) to number (ts)
+[typeMap]
+int = "number"
+
+# Output options
+[output]
+dir = "./"
+extension = "ts"

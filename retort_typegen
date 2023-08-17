@@ -10,14 +10,13 @@ use Retort\Validation\Validation;
 use Retort\Validation\ValidObject;
 use Retort\Validation\ValidString;
 use Retort\Request\RetortRequest;
-
-use function PHPUnit\Framework\fileExists;
+use Yosymfony\Toml\Toml;
 
 function createAbstractType(?string $class)
 {
     if (empty($class)) return null;
     if (!is_subclass_of($class, RetortRequest::class)) {
-        print "Skipped '$class': is not an instance of RetortRequest." . PHP_EOL;
+        print "Skipped: '$class' is not an instance of RetortRequest." . PHP_EOL;
         return;
     }
 
@@ -67,40 +66,41 @@ function createAbstractType(?string $class)
     return $created;
 }
 
-function createDefinitions($abstractType, string $template, array &$defs)
+function createDefinitions($abstractType, string $template, array $typeMap, array &$defs)
 {
     foreach ($abstractType['properties'] as $property) {
         $type = gettype($property['type']);
 
         if ($type == 'array') {
-            createDefinitions($property['type'], $template, $defs);
+            createDefinitions($property['type'], $template, $typeMap, $defs);
             $definition[] = [
                 ...$property,
-                'type' => $property['type']['class']
+                'type' => $typeMap[$property['type']['class']] ?? $property['type']['class']
             ];
         } else {
-            $definition[] = $property;
+            $definition[] = [
+                ...$property,
+                'type' => $typeMap[$property['type']] ?? $property['type']
+            ];
         }
     }
 
     $m = new Mustache_Engine(array('entity_flags' => ENT_QUOTES));
 
     $defs[$abstractType['class']] = $m->render($template, ['class' => $abstractType['class'], 'definitions' => $definition]);
-    //return implode(PHP_EOL, $definition);
 }
+
+$path =  $path = explode('/', __FILE__);
+array_pop($path);
+$path = implode('/', $path);
 
 $command = new Command('retort_typegen', 'Generate types');
 $command
-    // Arguments are separated by space
-    // Format: `<name>` for required, `[name]` for optional
-    //  `[name:default]` for default value, `[name...]` for variadic (last argument)
-    ->arguments('<classes...>')
-    // `-h --help`, `-V --version`, `-v --verbosity` options are already added by default.
-    // Format: `<name>` for required, `[name]` for optional
-    ->option('-e --extension [ext]', 'Output file extension (required with output dir)', fn ($value) => strlen($value) < 20 ? $value : null)
-    ->option('-o --output-dir [dir]', 'Output dir (default outputs to STDOUT)')
-    ->option('-t,--template [file]', 'Use a custom mustache generator template')
-    ->option('-g,--generate [generator]', 'Use a built in in generator, e.g., ts, flutter', fn ($value) => in_array($value, ['ts', 'flutter']) ? $value : null, 'ts');
+    ->option('-c, --config <file>', 'Configuration toml file', function ($file) use ($path) {
+        $filename = $path . '/' . $file;
+        if (file_exists($filename)) return $filename;
+        else return null;
+    });
 
 try {
     $command->parse($argv);
@@ -108,67 +108,30 @@ try {
     exit($e->getMessage());
 }
 
-$templates['ts'] = <<<T
-interface {{class}} {
-    {{#definitions}}
-    {{name}}{{#nullable}}?{{/nullable}}: {{type}}{{#iterable}}[]{{/iterable}};
-    {{/definitions}}
-}
-T;
-
-$templates['flutter'] = <<<T
-interface {{class}} {
-    {{#definitions}}
-    {{name}}{{#nullable}}?{{/nullable}}: {{type}}{{#iterable}}[]{{/iterable}};
-    {{/definitions}}
-}
-T;
-
-// Print all values:
 $args = $command->values(false);
+if (empty($args['config'])) exit("Config file '$args[config]' not found.");
 
-if (!empty($args['template'])) {
-    $filename = str_replace('/retort_typegen', '', __FILE__) . '/' . $args['template'];
-    if (!file_exists($filename)) exit("Template file: '$filename' not found.");
-
-    $fileTemplate = file_get_contents($filename);
+try {
+    $config = Toml::parseFile($args['config']);
+} catch (Exception $e) {
+    exit('Config file error: ' . $e->getMessage());
 }
 
-if (empty($args['generate'])) exit('Invalid generator specified.');
+if (empty($config['template'])) exit('No template specified.');
 
-if (!empty($args['outputDir'])) {
-    if (empty($args['extension'])) exit("File extension (of less than 20 characters) must be specified for file output.");
-    $dir = str_replace('/retort_typegen', '', __FILE__) . '/' . $args['outputDir'];
-    if (!is_dir($dir)) exit("Output dir '$dir' not found.");
-
-    $outputDir = $args['outputDir'];
-}
-
-$template = $fileTemplate ?? $templates[$args['generate']];
-
-foreach ($args['classes'] as $class) {
+foreach ($config['classes'] as $class) {
     $abstract = createAbstractType($class);
-
     if (empty($abstract)) continue;
 
     $defs = [];
-    createDefinitions($abstract, $template, $defs);
+    createDefinitions($abstract, $config['template'], $config['typeMap'] ?? [], $defs);
 
-    if (!empty($outputDir)) {
-        $path = explode('\\', $class);
-        $outputFile = $path[count($path) - 1] . ".$args[extension]";
-        file_put_contents($outputDir . '/' . strtolower($outputFile), implode(PHP_EOL . PHP_EOL, $defs));
-    } else {
+    if (empty($config['output']['dir'])) {
         print(implode(PHP_EOL . PHP_EOL, $defs));
+    } else {
+        $classPath = explode('\\', $class);
+        $className = array_pop($classPath);
+        $outputFile = $className . '.' . $config['output']['extension'];
+        file_put_contents($config['output']['dir'] . '/' . strtolower($outputFile), implode(PHP_EOL . PHP_EOL, $defs));
     }
 }
-/*
-$type = createAbstractType($argv[1]);
-print_r($type);
-
-$d = [];
-createDefinitions($type, $d);
-print_r($d);
-
-print(__FILE__);
-*/
