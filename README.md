@@ -21,7 +21,7 @@ To validate requests, add `Validation` attributes to request class properties an
     $request = Validation::createObject(ThingGetRequest::class, ['id' => 0]); // throws Error
     $request = Validation::createObject(ThingGetRequest::class, ['id' => 1]); // creates a ThingGetRequest object with id = 1
 
-Using reflection and the `Validation` property attributes it will be possible to automatically generate Typescript or other types from `RetortRequest` objects for frontend use! (Working on this feature...)
+Using the `Validation` property attributes it is possible to automatically generate Typescript or other types from `RetortRequest` objects for frontend use! (see below)
 
 ## Define and call a route method
 
@@ -117,3 +117,31 @@ A few `DependencyController`s are provided as examples. For instance, the `Mysql
 
     $db = new mysqli('localhost', 'user', 'super_secure_password', 'database');
     $class = new ThingController($db); // inject $db
+
+## Generating types
+
+Run `vendor/bin/retort_typegen -c <file>` with your config file to generate types. The config file is a [TOML](https://toml.io/en/) file where configuration options and a type definition template are defined. See the sample [config](sample_config.toml) for more details. Templates are defined in [mustache](https://mustache.github.io) format.
+
+Provide the classes to generate. Classes must be autoloaded and an instance of `RetortRequest`.
+
+    # Generate type definitions for these PHP classes
+    classes = [
+        "Retort\\Test\\Helper\\Jacket"
+    ]
+
+Setup the template.
+
+    # Sample template for Typescript type generation in mustache format
+    template = '''
+    interface {{class}} {
+        {{#definitions}}
+        {{name}}{{#nullable}}?{{/nullable}}: {{type}}{{#iterable}}[]{{/iterable}};
+        {{/definitions}}
+    }
+    '''
+
+PHP types can be mapped to other languages under `typeMap`.
+
+    # Type mappings, e.g., int (php) to number (ts)
+    [typeMap]
+    int = "number"
