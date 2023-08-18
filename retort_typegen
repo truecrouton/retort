@@ -97,7 +97,7 @@ $path = implode('/', $path);
 $command = new Command('retort_typegen', 'Generate types');
 $command
     ->option('-c, --config <file>', 'Configuration toml file', function ($file) use ($path) {
-        $filename = $path . '/' . $file;
+        $filename = $path . '/../../../' . $file;
         if (file_exists($filename)) return $filename;
         else return null;
     });
