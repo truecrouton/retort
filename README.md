@@ -129,7 +129,7 @@ Provide the classes to generate. Classes must be autoloaded and an instance of `
         "Retort\\Test\\Helper\\Jacket"
     ]
 
-Setup the template.
+Setup the template, in this case a Typescript class template.
 
     # Sample template for Typescript type generation in mustache format
     template = '''
@@ -139,6 +139,44 @@ Setup the template.
         {{/definitions}}
     }
     '''
+
+Different templates for different languages can be deinfed. For example, here is a flutter class template.
+
+    class {{class}} {
+        {{#definitions}}
+        final {{type}}{{#nullable}}?{{/nullable}} {{name}};
+        {{/definitions}}
+
+        const {{class}}({
+            {{#definitions}}
+            {{^nullable}}required {{/nullable}}this.{{name}},
+            {{/definitions}}
+        });
+
+        factory {{class}}.fromJson(Map<String, dynamic> json) {
+            return {{class}}(
+            {{#definitions}}
+            {{name}}: json['{{name}}'],
+            {{/definitions}}
+            );
+        }
+
+        factory {{class}}.fromObject(Map<String, dynamic> json) {
+            return {{class}}(
+            {{#definitions}}
+            {{name}}: json['{{name}}'],
+            {{/definitions}}
+            );
+        }
+
+        Map<String, dynamic> toJson() {
+            return {
+            {{#definitions}}
+            '{{name}}': {{name}},
+            {{/definitions}}
+            };
+        }
+    }
 
 PHP types can be mapped to other languages under `typeMap`.
 
