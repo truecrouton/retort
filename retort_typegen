@@ -90,13 +90,13 @@ function createDefinitions($abstractType, string $template, array $typeMap, arra
     $defs[$abstractType['class']] = $m->render($template, [
         'class' => $abstractType['class'],
         'definitions' => $definition,
-        'toCamelCase' => function ($text, Mustache_LambdaHelper $helper) {
+        'snakeToCamelCase' => function ($text, Mustache_LambdaHelper $helper) {
             $string = $helper->render($text);
-            $str = str_replace('-', '', ucwords($string, '-'));
+            $str = str_replace('_', '', ucwords($string, '_'));
             $str = lcfirst($str);
             return $str;
         },
-        'toSnakeCase' => function ($text, Mustache_LambdaHelper $helper) {
+        'camelToSnakeCase' => function ($text, Mustache_LambdaHelper $helper) {
             $string = $helper->render($text);
             preg_match_all('!([A-Z][A-Z0-9]*(?=$|[A-Z][a-z0-9])|[A-Za-z][a-z0-9]+)!', $string, $matches);
             $ret = $matches[0];
